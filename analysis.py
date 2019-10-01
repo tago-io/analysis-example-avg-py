@@ -1,21 +1,112 @@
 # Analysis Example
-# Hello World
+# Minimum, maximum, and average
 
-# Learn how to send messages to the console located on the TagoIO analysis screen.
-# You can use this principle to show any information during and after development.
+# Get the minimum, maximum, and the average value of the variable temperature from your device,
+# and save these values in new variables
 
+# Instructions
+# To run this analysis you need to add a device token to the environment variables,
+# To do that, go to your device, then token and copy your token.
+#* Go the the analysis, then environment variables, 
+# type device_token on key, and paste your token on value
+
+import functools
+from tago import Device
 from tago import Analysis
 
 # The function myAnalysis will run when you execute your analysis
 def myAnalysis(context, scope):
-  # This will log "Hello World" at the TagoIO Analysis console
-  context.log("Hello World")
+  # reads the value of device_token from the environment variable
+  device_token = list(filter(lambda device_token: device_token['key'] == 'device_token', context.environment))
+  device_token = device_token[0]['value']
 
-  #  This will log the environment to the TagoIO Analysis console
-  context.log('Environment:', context.environment)
+  if not device_token:
+    return context.log("Missing device_token Environment Variable.")
+  
+  my_device = Device(device_token)
 
-  #  This will log the scope to the TagoIO Analysis console
-  context.log('my scope:', scope)
+  # This is a filter to get the minimum value of the variable temperature in the last day
+  minFilter = {
+    'variable': 'temperature',
+    'query': 'min',
+    'start_date': '1 day',
+  }
+
+  # Now we use the filter for the device to get the data
+  # check if the variable min has any value
+  # if so, we crete a new object to send to Tago
+  min_result = my_device.find(minFilter)
+  if len(min_result):
+    min_result = min_result[0]
+
+    minValue = {
+      'variable': 'temperature_minimum',
+      'value': min_result.value,
+      'unit': 'F',
+    }
+  
+    # now we insert the new object with the minimum value
+    result = device.insert(minValue)
+    if result['status'] is not True:
+      context.log(result['result'])
+    else:
+      context.log('Temperature Minimum Updated')
+
+  else:
+    context.log('Minimum value not found')
+
+  # This is a filter to get the maximum value of the variable temperature in the last day
+  maxFilter = {
+    'variable': 'temperature',
+    'query': 'max',
+    'start_date': '1 day',
+  }
+
+  max_result = my_device.find(minFilter)
+  if len(max_result):
+    max_result = max_result[0]
+
+    minValue = {
+      'variable': 'temperature_maximum',
+      'value': max_result.value,
+      'unit': 'F',
+    }
+  
+    # now we insert the new object with the Maximum value
+    result = device.insert(minValue)
+    if result['status'] is not True:
+      context.log(result['result'])
+    else:
+      context.log('Temperature Maximum Updated')
+
+  else:
+    context.log('Maximum value not found')
+
+  # This is a filter to get the last 1000 values of the variable temperature in the last day
+  avgFilter = {
+    'variable': 'temperature',
+    'qty': 1000,
+    'start_date': '1 day',
+  }
+
+  avg = device.find(avgFilter)
+  if len(avg):
+    temperatureSum = functools.reduce(lambda a,b : a+int(b.value),avg)
+    temperatureSum = temperatureSum / len(avg)
+  
+    avgValue = {
+      'variable': 'temperature_average',
+      'value': temperatureSum,
+      'unit': 'F',
+    }
+
+    result = device.insert(avgValue)
+    if result['status'] is not True:
+      context.log(result['result'])
+    else:
+      context.log('Temperature Average Updated')
+  else:
+    context.log('No result found for the avg calculation')
 
 # The analysis token in only necessary to run the analysis outside TagoIO
 Analysis('MY-ANALYSIS-TOKEN-HERE').init(myAnalysis)
