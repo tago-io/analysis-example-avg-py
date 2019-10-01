@@ -9,8 +9,6 @@
 # To do that, go to your device, then token and copy your token.
 #* Go the the analysis, then environment variables, 
 # type device_token on key, and paste your token on value
-
-import functools
 from tago import Device
 from tago import Analysis
 
@@ -28,27 +26,28 @@ def myAnalysis(context, scope):
   # This is a filter to get the minimum value of the variable temperature in the last day
   minFilter = {
     'variable': 'temperature',
-    'query': 'min',
-    'start_date': '1 day',
+    'qty': 1
   }
 
   # Now we use the filter for the device to get the data
   # check if the variable min has any value
   # if so, we crete a new object to send to Tago
-  min_result = my_device.find(minFilter)
-  if len(min_result):
-    min_result = min_result[0]
+  min_result = my_device.find({ 'variable': 'temperature', 'qty': 1 })
+  if len(min_result["result"]) and min_result['status'] is True:
+    # context.log(min_result["result"])
+    min_result = min_result["result"][0]
 
     minValue = {
       'variable': 'temperature_minimum',
-      'value': min_result.value,
+      'value': min_result["value"],
       'unit': 'F',
     }
   
     # now we insert the new object with the minimum value
-    result = device.insert(minValue)
+    result = my_device.insert(minValue)
     if result['status'] is not True:
-      context.log(result['result'])
+      return
+      # context.log(result['result'])
     else:
       context.log('Temperature Minimum Updated')
 
@@ -63,17 +62,17 @@ def myAnalysis(context, scope):
   }
 
   max_result = my_device.find(minFilter)
-  if len(max_result):
-    max_result = max_result[0]
+  if len(max_result["result"]) and max_result['status'] is True:
+    max_result = max_result["result"][0]
 
     minValue = {
       'variable': 'temperature_maximum',
-      'value': max_result.value,
+      'value': max_result["value"],
       'unit': 'F',
     }
   
     # now we insert the new object with the Maximum value
-    result = device.insert(minValue)
+    result = my_device.insert(minValue)
     if result['status'] is not True:
       context.log(result['result'])
     else:
@@ -89,10 +88,14 @@ def myAnalysis(context, scope):
     'start_date': '1 day',
   }
 
-  avg = device.find(avgFilter)
-  if len(avg):
-    temperatureSum = functools.reduce(lambda a,b : a+int(b.value),avg)
+  avg = my_device.find(avgFilter)
+  if len(avg["result"]) and avg['status'] is True:
+    temperatureSum = 0
+    for item in avg["result"]:
+      temperatureSum += item["value"]
+
     temperatureSum = temperatureSum / len(avg)
+    context.log(temperatureSum)
   
     avgValue = {
       'variable': 'temperature_average',
@@ -100,7 +103,7 @@ def myAnalysis(context, scope):
       'unit': 'F',
     }
 
-    result = device.insert(avgValue)
+    result = my_device.insert(avgValue)
     if result['status'] is not True:
       context.log(result['result'])
     else:
