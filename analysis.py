@@ -92,7 +92,7 @@ def myAnalysis(context, scope):
   if len(avg["result"]) and avg['status'] is True:
     temperatureSum = 0
     for item in avg["result"]:
-      temperatureSum += item["value"]
+      temperatureSum = float(temperatureSum) + float(item["value"])
 
     temperatureSum = temperatureSum / len(avg)
     context.log(temperatureSum)
