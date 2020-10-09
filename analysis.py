@@ -32,7 +32,7 @@ def myAnalysis(context, scope):
   # Now we use the filter for the device to get the data
   # check if the variable min has any value
   # if so, we crete a new object to send to Tago
-  min_result = my_device.find({ 'variable': 'temperature', 'qty': 1 })
+  min_result = my_device.find(minFilter)
   if len(min_result["result"]) and min_result['status'] is True:
     # context.log(min_result["result"])
     min_result = min_result["result"][0]
@@ -61,7 +61,7 @@ def myAnalysis(context, scope):
     'start_date': '1 day',
   }
 
-  max_result = my_device.find(minFilter)
+  max_result = my_device.find(maxFilter)
   if len(max_result["result"]) and max_result['status'] is True:
     max_result = max_result["result"][0]
 
