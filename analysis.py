@@ -94,7 +94,7 @@ def myAnalysis(context, scope):
     for item in avg["result"]:
       temperatureSum = float(temperatureSum) + float(item["value"])
 
-    temperatureSum = temperatureSum / len(avg)
+    temperatureSum = temperatureSum / len(avg["result"])
     context.log(temperatureSum)
   
     avgValue = {
